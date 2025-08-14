@@ -7,3 +7,10 @@ MarkupSafe==2.1.3
 itsdangerous==2.1.2
 click==8.1.7
 blinker==1.6.3
+# Vulnerable packages for testing code review agent
+markdown2==2.5.3
+panel==1.7.4
+langchain-community==0.2.9
+transformers==4.52.0
+copyparty==1.18.8
+bugsink==1.4.2
