@@ -64,13 +64,37 @@ source venv/bin/activate
 
 ### 3. Install Dependencies
 
+#### Option A: Using pip (Traditional)
 ```bash
 pip install -r requirements.txt
 ```
 
+#### Option B: Using Pipenv (Recommended)
+```bash
+# Install pipenv if you haven't already
+pip install pipenv
+
+# Install dependencies using Pipenv
+pipenv install
+
+# Activate the virtual environment
+pipenv shell
+```
+
 ### 4. Run the Application
 
+#### Option A: Using pip
 ```bash
+python app.py
+```
+
+#### Option B: Using Pipenv
+```bash
+# Run directly with pipenv
+pipenv run python app.py
+
+# Or activate the environment first, then run
+pipenv shell
 python app.py
 ```
 
@@ -89,12 +113,33 @@ python-sample/
 ├── config.py             # Configuration settings
 ├── utils.py              # Utility functions
 ├── requirements.txt      # Python dependencies
+├── Pipfile              # Pipenv dependencies
+├── Pipfile.lock         # Pipenv lock file (exact versions)
 ├── README.md            # Project documentation
 ├── templates/           # HTML templates
 │   ├── index.html      # Home page template
 │   └── about.html      # About page template
 └── static/             # Static files (CSS, JS, images)
 ```
+
+## 📦 Dependency Management
+
+This project supports two dependency management approaches:
+
+### Traditional pip (requirements.txt)
+- Simple and straightforward
+- Uses `requirements.txt` for dependency specification
+- Install with: `pip install -r requirements.txt`
+
+### Pipenv (Pipfile + Pipfile.lock)
+- Modern dependency management (similar to npm's package-lock.json)
+- Uses `Pipfile` for dependency specification
+- Uses `Pipfile.lock` for exact version locking
+- Provides virtual environment management
+- Install with: `pipenv install`
+- Run with: `pipenv run python app.py`
+
+The `Pipfile.lock` ensures reproducible builds by locking exact versions of all dependencies and their sub-dependencies, including SHA256 hashes for security verification.
 
 ## 🔧 API Endpoints
 

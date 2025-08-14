@@ -1,72 +1,145 @@
+"""
+Main Flask application with modular structure.
+"""
+
 from flask import Flask, render_template, request, jsonify
-import requests
-import os
 from datetime import datetime
+import logging
+import os
 
-app = Flask(__name__)
+# Import our modules
+from models import TaskManager, WeatherService, TaskStatus
+from database import TaskDatabase, WeatherDatabase
+from config import get_config
+from utils import format_datetime, get_application_info
 
-# Sample data for demonstration
-TASKS = [
-    {"id": 1, "title": "Learn Flask", "completed": True},
-    {"id": 2, "title": "Build a web app", "completed": False},
-    {"id": 3, "title": "Deploy to production", "completed": False}
-]
+# Import API routes
+from api_routes import tasks_bp, users_bp, weather_bp, admin_bp
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def create_app():
+    """Application factory pattern."""
+    app = Flask(__name__)
+    
+    # Load configuration
+    config = get_config()
+    app.config.from_object(config)
+    
+    # Initialize services
+    app.task_manager = TaskManager()
+    app.weather_service = WeatherService()
+    app.task_db = TaskDatabase()
+    app.weather_db = WeatherDatabase()
+    
+    # Register blueprints
+    app.register_blueprint(tasks_bp)
+    app.register_blueprint(users_bp)
+    app.register_blueprint(weather_bp)
+    app.register_blueprint(admin_bp)
+    
+    return app
+
+app = create_app()
 
 @app.route('/')
 def home():
     """Home page route"""
-    return render_template('index.html', tasks=TASKS, current_time=datetime.now())
-
-@app.route('/api/tasks')
-def get_tasks():
-    """API endpoint to get all tasks"""
-    return jsonify(TASKS)
-
-@app.route('/api/tasks', methods=['POST'])
-def add_task():
-    """API endpoint to add a new task"""
-    data = request.get_json()
-    if not data or 'title' not in data:
-        return jsonify({"error": "Title is required"}), 400
-    
-    new_task = {
-        "id": len(TASKS) + 1,
-        "title": data['title'],
-        "completed": False
-    }
-    TASKS.append(new_task)
-    return jsonify(new_task), 201
-
-@app.route('/api/tasks/<int:task_id>', methods=['PUT'])
-def update_task(task_id):
-    """API endpoint to update a task"""
-    task = next((t for t in TASKS if t['id'] == task_id), None)
-    if not task:
-        return jsonify({"error": "Task not found"}), 404
-    
-    data = request.get_json()
-    if 'title' in data:
-        task['title'] = data['title']
-    if 'completed' in data:
-        task['completed'] = data['completed']
-    
-    return jsonify(task)
-
-@app.route('/api/weather')
-def get_weather():
-    """API endpoint to get weather information (mock data)"""
-    weather_data = {
-        "location": "Sample City",
-        "temperature": "22°C",
-        "condition": "Sunny",
-        "humidity": "65%"
-    }
-    return jsonify(weather_data)
+    try:
+        # Get tasks from database
+        tasks = app.task_db.get_all_tasks()
+        
+        # Convert to simple format for template
+        simple_tasks = []
+        for task in tasks:
+            simple_tasks.append({
+                "id": task.id,
+                "title": task.title,
+                "completed": task.status == TaskStatus.COMPLETED
+            })
+        
+        return render_template('index.html', tasks=simple_tasks, current_time=datetime.now())
+    except Exception as e:
+        logger.error(f"Error loading home page: {e}")
+        # Fallback to empty tasks
+        return render_template('index.html', tasks=[], current_time=datetime.now())
 
 @app.route('/about')
 def about():
     """About page route"""
-    return render_template('about.html')
+    app_info = get_application_info()
+    return render_template('about.html', app_info=app_info)
+
+@app.route('/api/tasks')
+def get_tasks():
+    """Legacy API endpoint to get all tasks (for backward compatibility)"""
+    try:
+        tasks = app.task_db.get_all_tasks()
+        tasks_data = [task.to_dict() for task in tasks]
+        return jsonify(tasks_data)
+    except Exception as e:
+        logger.error(f"Error getting tasks: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/api/tasks', methods=['POST'])
+def add_task():
+    """Legacy API endpoint to add a new task (for backward compatibility)"""
+    try:
+        data = request.get_json()
+        if not data or 'title' not in data:
+            return jsonify({"error": "Title is required"}), 400
+        
+        # Create task using task manager
+        task = app.task_manager.add_task(
+            title=data['title'],
+            description=data.get('description'),
+            priority=data.get('priority', 1)
+        )
+        
+        # Save to database
+        if app.task_db.save_task(task):
+            return jsonify(task.to_dict()), 201
+        else:
+            return jsonify({"error": "Failed to save task"}), 500
+    except Exception as e:
+        logger.error(f"Error adding task: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/api/weather')
+def get_weather():
+    """Legacy API endpoint to get weather information (for backward compatibility)"""
+    try:
+        # Get weather for default location
+        weather = app.weather_service.get_weather("Sample City")
+        return jsonify(weather.to_dict())
+    except Exception as e:
+        logger.error(f"Error getting weather: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors."""
+    return jsonify({"error": "Resource not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors."""
+    logger.error(f"Internal server error: {error}")
+    return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Get configuration
+    config = get_config()
+    
+    print(f"🚀 Starting {get_application_info()['name']}")
+    print(f"📡 Server will be available at: http://{config.HOST}:{config.PORT}")
+    print(f"🔧 Debug mode: {'ON' if config.DEBUG else 'OFF'}")
+    print("=" * 50)
+    
+    app.run(
+        debug=config.DEBUG,
+        host=config.HOST,
+        port=config.PORT
+    )
