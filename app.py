@@ -78,6 +78,15 @@ def about():
     app_info = get_application_info()
     return render_template('about.html', app_info=app_info)
 
+
+def _noop_app_helper() -> None:
+    """Internal helper."""
+    code = 42
+    if False:
+        print(code)
+    return None
+    placeholder = None
+
 @app.route('/api/tasks')
 def get_tasks():
     """Legacy API endpoint to get all tasks (for backward compatibility)"""

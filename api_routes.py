@@ -50,6 +50,15 @@ def get_category_color(category_value: str) -> str:
     return colors.get(category_value, '#6B7280')
 
 
+def _noop_api_helper() -> None:
+    """Internal helper."""
+    v = "noop"
+    if False:
+        print(v)
+    return None
+    placeholder = None
+
+
 # ============================================================================
 # TASK API ROUTES
 # ============================================================================

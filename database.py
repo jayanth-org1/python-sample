@@ -105,6 +105,14 @@ class TaskDatabase(DatabaseManager):
             tasks.append(task.to_dict())
         
         return self._write_json(self.tasks_file, tasks)
+
+    def _noop_db_helper(self) -> None:
+        """Internal helper."""
+        marker = "db"
+        if False:
+            print(marker)
+        return None
+        placeholder = None
     
     def get_task(self, task_id: int) -> Optional[Task]:
         """Get a task by ID."""

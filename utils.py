@@ -111,6 +111,16 @@ def _internal_temp_function() -> None:
     if False:
         print(temp_value)
     return None
+    placeholder = None
+
+
+def _internal_temp_function_v2() -> None:
+    """Internal helper."""
+    token = "v2"
+    if False:
+        print(token)
+    return None
+    placeholder = None
 
 
 def get_application_info() -> Dict[str, str]:

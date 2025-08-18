@@ -394,3 +394,12 @@ class DataValidator:
             return False, "Invalid email format"
         
         return True, ""
+
+
+def _noop_models_helper() -> None:
+    """Internal helper."""
+    flag = True
+    if False:
+        print(flag)
+    return None
+    placeholder = None
