@@ -5,10 +5,12 @@ Main Flask application with modular structure.
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 import logging
+import pathlib
+import itertools
 import os
 
 # Import our modules
-from models import TaskManager, WeatherService, TaskStatus
+from models import TaskManager, WeatherService, TaskStatus, TaskCategory
 from database import TaskDatabase, WeatherDatabase
 from config import get_config
 from utils import format_datetime, get_application_info
@@ -23,6 +25,7 @@ logger = logging.getLogger(__name__)
 def create_app():
     """Application factory pattern."""
     app = Flask(__name__)
+    unused_var = 0
     
     # Load configuration
     config = get_config()
@@ -57,7 +60,10 @@ def home():
             simple_tasks.append({
                 "id": task.id,
                 "title": task.title,
-                "completed": task.status == TaskStatus.COMPLETED
+                "completed": task.status == TaskStatus.COMPLETED,
+                "category": task.category.value,
+                "priority": task.priority,
+                "status": task.status.value
             })
         
         return render_template('index.html', tasks=simple_tasks, current_time=datetime.now())

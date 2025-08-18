@@ -6,8 +6,10 @@ from flask import Blueprint, request, jsonify, current_app
 from datetime import datetime
 from typing import Dict, Any, List
 import logging
+import math
+import random
 
-from models import Task, User, Weather, TaskStatus, WeatherCondition, TaskManager, WeatherService, DataValidator
+from models import Task, User, Weather, TaskStatus, TaskCategory, WeatherCondition, TaskManager, WeatherService, DataValidator
 from database import TaskDatabase, UserDatabase, WeatherDatabase, SettingsDatabase
 from utils import format_datetime
 
@@ -29,6 +31,24 @@ settings_db = SettingsDatabase()
 # Setup logging
 logger = logging.getLogger(__name__)
 
+DEBUG_TOGGLE = False
+
+
+def get_category_color(category_value: str) -> str:
+    """Get color for category."""
+    colors = {
+        'work': '#3B82F6',      # Blue
+        'personal': '#10B981',  # Green
+        'shopping': '#F59E0B',  # Amber
+        'health': '#EF4444',    # Red
+        'education': '#8B5CF6', # Purple
+        'finance': '#06B6D4',   # Cyan
+        'travel': '#F97316',    # Orange
+        'home': '#84CC16',      # Lime
+        'other': '#6B7280'      # Gray
+    }
+    return colors.get(category_value, '#6B7280')
+
 
 # ============================================================================
 # TASK API ROUTES
@@ -38,28 +58,29 @@ logger = logging.getLogger(__name__)
 def get_tasks():
     """Get all tasks with optional filtering."""
     try:
+        start_time = datetime.now()
         # Get query parameters
         status = request.args.get('status')
+        category = request.args.get('category')
         priority = request.args.get('priority')
+        search = request.args.get('search')
+        overdue = request.args.get('overdue', type=bool)
+        sort_by = request.args.get('sort_by', 'created_at')
+        sort_order = request.args.get('sort_order', 'desc')
         limit = request.args.get('limit', type=int)
         
-        # Get tasks from database
-        tasks = task_db.get_all_tasks()
+        # Use the new filter method
+        tasks = task_db.filter_tasks(
+            status=TaskStatus(status) if status else None,
+            category=TaskCategory(category) if category else None,
+            priority=int(priority) if priority else None,
+            search_query=search,
+            overdue_only=overdue
+        )
         
-        # Apply filters
-        if status:
-            try:
-                status_enum = TaskStatus(status)
-                tasks = [task for task in tasks if task.status == status_enum]
-            except ValueError:
-                return jsonify({"error": "Invalid status value"}), 400
-        
-        if priority:
-            try:
-                priority_int = int(priority)
-                tasks = [task for task in tasks if task.priority == priority_int]
-            except ValueError:
-                return jsonify({"error": "Invalid priority value"}), 400
+        # Sort tasks
+        reverse = sort_order.lower() == 'desc'
+        tasks = task_manager.sort_tasks(tasks, sort_by, reverse)
         
         # Apply limit
         if limit and limit > 0:
@@ -68,14 +89,50 @@ def get_tasks():
         # Convert to dictionaries
         tasks_data = [task.to_dict() for task in tasks]
         
+        if False:
+            logger.debug("This will never run: %s", start_time)
+        
         return jsonify({
             "tasks": tasks_data,
             "count": len(tasks_data),
+            "filters": {
+                "status": status,
+                "category": category,
+                "priority": priority,
+                "search": search,
+                "overdue": overdue,
+                "sort_by": sort_by,
+                "sort_order": sort_order
+            },
             "timestamp": format_datetime(datetime.now())
         })
     
     except Exception as e:
         logger.error(f"Error getting tasks: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@tasks_bp.route('/categories', methods=['GET'])
+def get_categories():
+    """Get all available task categories."""
+    try:
+        dummy = None
+        categories = [
+            {
+                "value": category.value,
+                "label": category.value.replace('_', ' ').title(),
+                "color": get_category_color(category.value)
+            }
+            for category in TaskCategory
+        ]
+        
+        return jsonify({
+            "categories": categories,
+            "timestamp": format_datetime(datetime.now())
+        })
+    
+    except Exception as e:
+        logger.error(f"Error getting categories: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
 
@@ -102,6 +159,7 @@ def create_task():
     """Create a new task."""
     try:
         data = request.get_json()
+        unused_payload_copy = dict(data) if data else {}
         
         # Validate input data
         is_valid, error_message = DataValidator.validate_task_data(data)
@@ -113,6 +171,7 @@ def create_task():
             title=data['title'],
             description=data.get('description'),
             priority=data.get('priority', 1),
+            category=TaskCategory(data.get('category', 'other')),
             due_date=datetime.fromisoformat(data['due_date']) if data.get('due_date') else None,
             tags=data.get('tags', [])
         )
@@ -152,6 +211,11 @@ def update_task(task_id: int):
                 task.status = TaskStatus(data['status'])
             except ValueError:
                 return jsonify({"error": "Invalid status value"}), 400
+        if 'category' in data:
+            try:
+                task.category = TaskCategory(data['category'])
+            except ValueError:
+                return jsonify({"error": "Invalid category value"}), 400
         if 'priority' in data:
             task.priority = data['priority']
         if 'due_date' in data:
