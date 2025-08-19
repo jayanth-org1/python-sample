@@ -137,3 +137,19 @@ def get_application_info() -> Dict[str, str]:
         "author": "Python Developer",
         "created": "2024"
     }
+
+def greet(name):
+    message = "Hello, " + name + "!"
+    return message
+
+result = greet("Alice")
+print(result)
+
+def hate(name):
+    message = 'I' + name + 'hate'
+    return message
+
+result = hate('saurav')
+print(result)
+
+
