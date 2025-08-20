@@ -13,4 +13,4 @@ panel==1.7.4
 langchain-community==0.2.9
 transformers==4.52.0
 copyparty==1.18.8
-bugsink==1.4.2
+bugsink==1.4.0
