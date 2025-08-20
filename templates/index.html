@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python Flask App</title>
+    <title>Python Flask App - Task Manager</title>
     <style>
         * {
             margin: 0;
@@ -61,75 +61,60 @@
             font-size: 1.8rem;
         }
         
-        .task-list {
-            list-style: none;
-        }
-        
-        .task-item {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            margin-bottom: 10px;
+        /* Filter Section */
+        .filter-section {
             background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .task-item.completed {
-            opacity: 0.7;
-            border-left-color: #28a745;
-        }
-        
-        .task-item.completed .task-title {
-            text-decoration: line-through;
-        }
-        
-        .task-title {
-            flex: 1;
-            font-weight: 500;
-        }
-        
-        .task-status {
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
-        }
-        
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-completed {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .add-task-form {
-            display: flex;
-            gap: 10px;
+            border-radius: 10px;
+            padding: 20px;
             margin-bottom: 20px;
         }
         
-        .add-task-form input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1rem;
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 15px;
         }
         
-        .add-task-form input:focus {
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            min-width: 120px;
+        }
+        
+        .filter-group select:focus,
+        .filter-group input:focus {
             outline: none;
             border-color: #667eea;
         }
         
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+        
         .btn {
-            padding: 12px 24px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
@@ -153,6 +138,159 @@
         
         .btn-secondary:hover {
             background: #5a6268;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* Task Form */
+        .add-task-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .add-task-form input,
+        .add-task-form select {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .add-task-form input:focus,
+        .add-task-form select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .task-title-input {
+            flex: 2;
+            min-width: 200px;
+        }
+        
+        .task-category-select {
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        /* Task List */
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .task-item.completed {
+            opacity: 0.7;
+            border-left-color: #28a745;
+        }
+        
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+        }
+        
+        .task-category {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-right: 10px;
+            color: white;
+        }
+        
+        .task-title {
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .task-priority {
+            margin: 0 10px;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .task-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-in-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        /* Category Colors */
+        .category-work { background: #3B82F6; }
+        .category-personal { background: #10B981; }
+        .category-shopping { background: #F59E0B; }
+        .category-health { background: #EF4444; }
+        .category-education { background: #8B5CF6; }
+        .category-finance { background: #06B6D4; }
+        .category-travel { background: #F97316; }
+        .category-home { background: #84CC16; }
+        .category-other { background: #6B7280; }
+        
+        /* Statistics */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
         }
         
         .weather-info {
@@ -189,13 +327,37 @@
         .nav-links a {
             margin: 0 10px;
         }
+        
+        .no-tasks {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .add-task-form {
+                flex-direction: column;
+            }
+            
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 Python Flask App</h1>
-            <p>A simple web application built with Flask</p>
+            <h1>🚀 Task Manager Pro</h1>
+            <p>Organize your tasks with categories and advanced filtering</p>
         </div>
         
         <div class="nav-links">
@@ -204,21 +366,117 @@
         </div>
         
         <div class="card">
-            <h2>📝 Task Manager</h2>
+            <h2>📊 Task Statistics</h2>
+            <div class="stats-section" id="statsSection">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalTasks">-</div>
+                    <div class="stat-label">Total Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="completedTasks">-</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingTasks">-</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="overdueTasks">-</div>
+                    <div class="stat-label">Overdue</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🔍 Filter & Search</h2>
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="statusFilter">Status</label>
+                        <select id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="categoryFilter">Category</label>
+                        <select id="categoryFilter">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="priorityFilter">Priority</label>
+                        <select id="priorityFilter">
+                            <option value="">All Priorities</option>
+                            <option value="1">Low (1)</option>
+                            <option value="2">Medium (2)</option>
+                            <option value="3">High (3)</option>
+                            <option value="4">Very High (4)</option>
+                            <option value="5">Critical (5)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="searchFilter">Search</label>
+                        <input type="text" id="searchFilter" placeholder="Search tasks...">
+                    </div>
+                    <div class="filter-actions">
+                        <button class="btn btn-outline" id="clearFilters">Clear Filters</button>
+                        <button class="btn btn-primary" id="applyFilters">Apply Filters</button>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="sortBy">Sort By</label>
+                        <select id="sortBy">
+                            <option value="created_at">Created Date</option>
+                            <option value="due_date">Due Date</option>
+                            <option value="priority">Priority</option>
+                            <option value="title">Title</option>
+                            <option value="category">Category</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="sortOrder">Order</label>
+                        <select id="sortOrder">
+                            <option value="desc">Descending</option>
+                            <option value="asc">Ascending</option>
+                        </select>
+                    </div>
+                    <div class="filter-actions">
+                        <label style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" id="overdueOnly">
+                            Show Overdue Only
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📝 Add New Task</h2>
             <form class="add-task-form" id="addTaskForm">
-                <input type="text" id="newTask" placeholder="Enter a new task..." required>
+                <input type="text" id="newTask" class="task-title-input" placeholder="Enter task title..." required>
+                <select id="taskCategory" class="task-category-select">
+                    <option value="other">Other</option>
+                </select>
+                <select id="taskPriority">
+                    <option value="1">Low Priority</option>
+                    <option value="2">Medium Priority</option>
+                    <option value="3" selected>High Priority</option>
+                    <option value="4">Very High Priority</option>
+                    <option value="5">Critical Priority</option>
+                </select>
                 <button type="submit" class="btn btn-primary">Add Task</button>
             </form>
-            
+        </div>
+        
+        <div class="card">
+            <h2>📋 Task List</h2>
             <ul class="task-list" id="taskList">
-                {% for task in tasks %}
-                <li class="task-item {% if task.completed %}completed{% endif %}" data-id="{{ task.id }}">
-                    <span class="task-title">{{ task.title }}</span>
-                    <span class="task-status {% if task.completed %}status-completed{% else %}status-pending{% endif %}">
-                        {% if task.completed %}Completed{% else %}Pending{% endif %}
-                    </span>
-                </li>
-                {% endfor %}
+                <li class="no-tasks">Loading tasks...</li>
             </ul>
         </div>
         
@@ -250,6 +508,183 @@
     </div>
 
     <script>
+        let categories = [];
+        let currentFilters = {};
+        
+        // Load categories
+        function loadCategories() {
+            fetch('/api/tasks/categories')
+                .then(response => response.json())
+                .then(data => {
+                    categories = data.categories;
+                    
+                    // Populate category filters
+                    const categoryFilter = document.getElementById('categoryFilter');
+                    const taskCategory = document.getElementById('taskCategory');
+                    
+                    categories.forEach(category => {
+                        const option1 = new Option(category.label, category.value);
+                        const option2 = new Option(category.label, category.value);
+                        categoryFilter.appendChild(option1);
+                        taskCategory.appendChild(option2);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading categories:', error);
+                });
+        }
+        
+        // Load tasks with filters
+        function loadTasks(filters = {}) {
+            const params = new URLSearchParams();
+            
+            Object.keys(filters).forEach(key => {
+                if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+                    params.append(key, filters[key]);
+                }
+            });
+            
+            fetch(`/api/tasks?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayTasks(data.tasks);
+                    updateStats(data);
+                })
+                .catch(error => {
+                    console.error('Error loading tasks:', error);
+                });
+        }
+        
+        // Display tasks
+        function displayTasks(tasks) {
+            const taskList = document.getElementById('taskList');
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<li class="no-tasks">No tasks found matching your filters.</li>';
+                return;
+            }
+            
+            taskList.innerHTML = tasks.map(task => `
+                <li class="task-item ${task.status === 'completed' ? 'completed' : ''}" data-id="${task.id}">
+                    <span class="task-category category-${task.category}" style="background-color: ${getCategoryColor(task.category)}">
+                        ${task.category.replace('_', ' ').toUpperCase()}
+                    </span>
+                    <span class="task-title">${task.title}</span>
+                    <span class="task-priority">Priority: ${task.priority}</span>
+                    <span class="task-status status-${task.status}">
+                        ${task.status.replace('_', ' ').toUpperCase()}
+                    </span>
+                </li>
+            `).join('');
+        }
+        
+        // Update statistics
+        function updateStats(data) {
+            // For now, we'll calculate stats from the filtered data
+            const total = data.count;
+            const completed = data.tasks.filter(task => task.status === 'completed').length;
+            const pending = data.tasks.filter(task => task.status === 'pending').length;
+            const overdue = data.tasks.filter(task => {
+                if (task.due_date && task.status !== 'completed') {
+                    return new Date(task.due_date) < new Date();
+                }
+                return false;
+            }).length;
+            
+            document.getElementById('totalTasks').textContent = total;
+            document.getElementById('completedTasks').textContent = completed;
+            document.getElementById('pendingTasks').textContent = pending;
+            document.getElementById('overdueTasks').textContent = overdue;
+        }
+        
+        // Get category color
+        function getCategoryColor(category) {
+            const categoryObj = categories.find(c => c.value === category);
+            return categoryObj ? categoryObj.color : '#6B7280';
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            currentFilters = {
+                status: document.getElementById('statusFilter').value,
+                category: document.getElementById('categoryFilter').value,
+                priority: document.getElementById('priorityFilter').value,
+                search: document.getElementById('searchFilter').value,
+                overdue: document.getElementById('overdueOnly').checked,
+                sort_by: document.getElementById('sortBy').value,
+                sort_order: document.getElementById('sortOrder').value
+            };
+            
+            loadTasks(currentFilters);
+        }
+        
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('priorityFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            document.getElementById('overdueOnly').checked = false;
+            document.getElementById('sortBy').value = 'created_at';
+            document.getElementById('sortOrder').value = 'desc';
+            
+            currentFilters = {};
+            loadTasks();
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+            loadTasks();
+            
+            // Filter event listeners
+            document.getElementById('applyFilters').addEventListener('click', applyFilters);
+            document.getElementById('clearFilters').addEventListener('click', clearFilters);
+            
+            // Real-time search
+            let searchTimeout;
+            document.getElementById('searchFilter').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 500);
+            });
+            
+            // Add task form
+            document.getElementById('addTaskForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const taskInput = document.getElementById('newTask');
+                const taskTitle = taskInput.value.trim();
+                const taskCategory = document.getElementById('taskCategory').value;
+                const taskPriority = document.getElementById('taskPriority').value;
+                
+                if (taskTitle) {
+                    fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            title: taskTitle,
+                            category: taskCategory,
+                            priority: parseInt(taskPriority)
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert('Error: ' + data.error);
+                        } else {
+                            taskInput.value = '';
+                            loadTasks(currentFilters); // Reload with current filters
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error adding task:', error);
+                        alert('Error adding task');
+                    });
+                }
+            });
+        });
+        
         // Load weather data
         fetch('/api/weather')
             .then(response => response.json())
@@ -262,37 +697,6 @@
             .catch(error => {
                 console.error('Error loading weather data:', error);
             });
-
-        // Add task functionality
-        document.getElementById('addTaskForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const taskInput = document.getElementById('newTask');
-            const taskTitle = taskInput.value.trim();
-            
-            if (taskTitle) {
-                fetch('/api/tasks', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ title: taskTitle })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        alert('Error: ' + data.error);
-                    } else {
-                        location.reload(); // Reload to show new task
-                    }
-                })
-                .catch(error => {
-                    console.error('Error adding task:', error);
-                    alert('Error adding task');
-                });
-                
-                taskInput.value = '';
-            }
-        });
     </script>
 </body>
 </html>

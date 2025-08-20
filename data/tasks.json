@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "id": 9,
+    "title": "Database test task",
+    "description": null,
+    "status": "pending",
+    "priority": 1,
+    "category": "other",
+    "created_at": "2025-08-18T11:58:39.428009",
+    "updated_at": "2025-08-18T11:58:39.428012",
+    "due_date": null,
+    "tags": []
+  }
+]

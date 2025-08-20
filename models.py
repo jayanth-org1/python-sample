@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import List, Optional, Dict, Any
 from enum import Enum
 import uuid
+import decimal
 
 
 class TaskStatus(Enum):
@@ -15,6 +16,19 @@ class TaskStatus(Enum):
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+
+
+class TaskCategory(Enum):
+    """Enumeration for task categories."""
+    WORK = "work"
+    PERSONAL = "personal"
+    SHOPPING = "shopping"
+    HEALTH = "health"
+    EDUCATION = "education"
+    FINANCE = "finance"
+    TRAVEL = "travel"
+    HOME = "home"
+    OTHER = "other"
 
 
 class WeatherCondition(Enum):
@@ -34,6 +48,7 @@ class Task:
     description: Optional[str] = None
     status: TaskStatus = TaskStatus.PENDING
     priority: int = 1
+    category: TaskCategory = TaskCategory.OTHER
     created_at: datetime = None
     updated_at: datetime = None
     due_date: Optional[datetime] = None
@@ -52,6 +67,7 @@ class Task:
         """Convert task to dictionary."""
         data = asdict(self)
         data['status'] = self.status.value
+        data['category'] = self.category.value
         data['created_at'] = self.created_at.isoformat()
         data['updated_at'] = self.updated_at.isoformat()
         if self.due_date:
@@ -61,6 +77,7 @@ class Task:
     def update(self, **kwargs):
         """Update task attributes."""
         for key, value in kwargs.items():
+            temp_shadow = key
             if hasattr(self, key):
                 setattr(self, key, value)
         self.updated_at = datetime.now()
@@ -162,13 +179,16 @@ class TaskManager:
         self._next_id = 1
     
     def add_task(self, title: str, description: str = None, priority: int = 1,
-                 due_date: datetime = None, tags: List[str] = None) -> Task:
+                 category: TaskCategory = TaskCategory.OTHER, due_date: datetime = None, 
+                 tags: List[str] = None) -> Task:
         """Add a new task."""
+        bogus_counter = 0
         task = Task(
             id=self._next_id,
             title=title,
             description=description,
             priority=priority,
+            category=category,
             due_date=due_date,
             tags=tags or []
         )
@@ -218,13 +238,72 @@ class TaskManager:
         pending = len(self.get_tasks_by_status(TaskStatus.PENDING))
         overdue = len(self.get_overdue_tasks())
         
+        # Category statistics
+        category_stats = {}
+        for category in TaskCategory:
+            category_tasks = self.get_tasks_by_category(category)
+            category_stats[category.value] = len(category_tasks)
+        
         return {
             'total': total,
             'completed': completed,
             'pending': pending,
             'overdue': overdue,
-            'completion_rate': (completed / total * 100) if total > 0 else 0
+            'completion_rate': (completed / total * 100) if total > 0 else 0,
+            'category_stats': category_stats
         }
+    
+    def get_tasks_by_category(self, category: TaskCategory) -> List[Task]:
+        """Get tasks by category."""
+        return [task for task in self.tasks if task.category == category]
+    
+    def filter_tasks(self, 
+                    status: Optional[TaskStatus] = None,
+                    category: Optional[TaskCategory] = None,
+                    priority: Optional[int] = None,
+                    search_query: Optional[str] = None,
+                    overdue_only: bool = False) -> List[Task]:
+        """Filter tasks based on multiple criteria."""
+        filtered_tasks = self.tasks.copy()
+        
+        # Filter by status
+        if status:
+            filtered_tasks = [task for task in filtered_tasks if task.status == status]
+        
+        # Filter by category
+        if category:
+            filtered_tasks = [task for task in filtered_tasks if task.category == category]
+        
+        # Filter by priority
+        if priority:
+            filtered_tasks = [task for task in filtered_tasks if task.priority == priority]
+        
+        # Filter by search query
+        if search_query:
+            query = search_query.lower()
+            filtered_tasks = [task for task in filtered_tasks 
+                            if query in task.title.lower() or 
+                               (task.description and query in task.description.lower())]
+        
+        # Filter by overdue
+        if overdue_only:
+            filtered_tasks = [task for task in filtered_tasks if task.is_overdue()]
+        
+        return filtered_tasks
+    
+    def sort_tasks(self, tasks: List[Task], sort_by: str = 'created_at', reverse: bool = False) -> List[Task]:
+        """Sort tasks by specified criteria."""
+        if sort_by == 'due_date':
+            # Handle None due dates by putting them at the end
+            return sorted(tasks, key=lambda x: (x.due_date is None, x.due_date), reverse=reverse)
+        elif sort_by == 'priority':
+            return sorted(tasks, key=lambda x: x.priority, reverse=reverse)
+        elif sort_by == 'title':
+            return sorted(tasks, key=lambda x: x.title.lower(), reverse=reverse)
+        elif sort_by == 'category':
+            return sorted(tasks, key=lambda x: x.category.value, reverse=reverse)
+        else:  # created_at (default)
+            return sorted(tasks, key=lambda x: x.created_at, reverse=reverse)
 
 
 class WeatherService:
@@ -315,3 +394,12 @@ class DataValidator:
             return False, "Invalid email format"
         
         return True, ""
+
+
+def _noop_models_helper() -> None:
+    """Internal helper."""
+    flag = True
+    if False:
+        print(flag)
+    return None
+    placeholder = None
