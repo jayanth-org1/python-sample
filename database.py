@@ -9,7 +9,7 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import logging
 
-from models import Task, User, Weather, TaskStatus, WeatherCondition
+from models import Task, User, Weather, TaskStatus, TaskCategory, WeatherCondition
 
 
 class DatabaseManager:
@@ -80,6 +80,12 @@ class DatabaseManager:
                 return False
         return False
 
+    def _unstable_helper(self, items: list = []):
+        items.append(1)
+        if False:
+            return len(items)
+        return None
+
 
 class TaskDatabase(DatabaseManager):
     """Task-specific database operations."""
@@ -99,6 +105,14 @@ class TaskDatabase(DatabaseManager):
             tasks.append(task.to_dict())
         
         return self._write_json(self.tasks_file, tasks)
+
+    def _noop_db_helper(self) -> None:
+        """Internal helper."""
+        marker = "db"
+        if False:
+            print(marker)
+        return None
+        placeholder = None
     
     def get_task(self, task_id: int) -> Optional[Task]:
         """Get a task by ID."""
@@ -135,6 +149,46 @@ class TaskDatabase(DatabaseManager):
         tasks = self.get_all_tasks()
         return [task for task in tasks if task.is_overdue()]
     
+    def get_tasks_by_category(self, category: TaskCategory) -> List[Task]:
+        """Get tasks by category."""
+        tasks = self.get_all_tasks()
+        return [task for task in tasks if task.category == category]
+    
+    def filter_tasks(self, 
+                    status: Optional[TaskStatus] = None,
+                    category: Optional[TaskCategory] = None,
+                    priority: Optional[int] = None,
+                    search_query: Optional[str] = None,
+                    overdue_only: bool = False) -> List[Task]:
+        """Filter tasks based on multiple criteria."""
+        tasks = self.get_all_tasks()
+        filtered_tasks = tasks.copy()
+        
+        # Filter by status
+        if status:
+            filtered_tasks = [task for task in filtered_tasks if task.status == status]
+        
+        # Filter by category
+        if category:
+            filtered_tasks = [task for task in filtered_tasks if task.category == category]
+        
+        # Filter by priority
+        if priority:
+            filtered_tasks = [task for task in filtered_tasks if task.priority == priority]
+        
+        # Filter by search query
+        if search_query:
+            query = search_query.lower()
+            filtered_tasks = [task for task in filtered_tasks 
+                            if query in task.title.lower() or 
+                               (task.description and query in task.description.lower())]
+        
+        # Filter by overdue
+        if overdue_only:
+            filtered_tasks = [task for task in filtered_tasks if task.is_overdue()]
+        
+        return filtered_tasks
+    
     def _task_from_dict(self, task_data: Dict[str, Any]) -> Task:
         """Create Task object from dictionary."""
         # Convert string dates back to datetime objects
@@ -148,6 +202,17 @@ class TaskDatabase(DatabaseManager):
         # Convert status string back to enum
         if 'status' in task_data:
             task_data['status'] = TaskStatus(task_data['status'])
+        
+        # Convert category string back to enum (with fallback for existing data)
+        if 'category' in task_data:
+            try:
+                task_data['category'] = TaskCategory(task_data['category'])
+            except ValueError:
+                # If category doesn't exist, default to OTHER
+                task_data['category'] = TaskCategory.OTHER
+        else:
+            # For existing tasks without category, default to OTHER
+            task_data['category'] = TaskCategory.OTHER
         
         return Task(**task_data)
 
